@@ -1,0 +1,10 @@
+menu "fengshui Configuration"
+
+config DHT22_GPIO
+    int "DHT_GPIO"
+	range 0 33
+    default 4
+    help
+        Config GPIO for DHT (default 4)
+
+endmenu
