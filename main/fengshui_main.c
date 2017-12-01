@@ -21,8 +21,9 @@
 void DHTHandler(void *pvParameter)
 {
 	struct Sensor *psSensor = (struct Sensor *)pvParameter;
+	uint8_t data[psSensor->ui32DataSize];
+	uint8_t package[SENSOR_PACKAGE_SIZE];
 	struct Connector *psConnector;
-	uint8_t data[5];
 	int err = 0;
 
 	if (!psSensor) {
@@ -39,15 +40,13 @@ void DHTHandler(void *pvParameter)
 			         psSensor->pfnQuery(SENSOR_DHT22_HUM, (uint8_t *)&data),
 					 psSensor->pfnQuery(SENSOR_DHT22_TEMP, (uint8_t *)&data));
 			if (psConnector) {
-				/* Sending ID */
-				err = psConnector->pfnSend(&psSensor->eType, sizeof(SENSOR_TYPE));
+				getSensorPackage((uint8_t *)&package, (uint8_t *)&data,
+				                 psSensor->ui32DataSize, psSensor->eType);
+				/* Sending package */
+				err = psConnector->pfnSend((uint8_t *)&package,
+				                           SENSOR_PACKAGE_SIZE);
 				if (err) {
 					ESP_LOGE(TAG, "Failed to send ID via connector\n");
-				}
-				/* Sending data */
-				err = psConnector->pfnSend(data, sizeof(data));
-				if (err) {
-					ESP_LOGE(TAG, "Failed to send data via connector\n");
 				}
 			}
 		}

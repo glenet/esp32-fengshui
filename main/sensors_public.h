@@ -1,6 +1,19 @@
 #ifndef SENSORS_PUBLIC_H
 #define SENSORS_PUBLIC_H
 
+/* Package format
+ * ====|====|==================|
+ *  ID |Size|       data       |
+ * ====|====|==================|
+ * 0  2     3                  12
+ */
+#define SENSOR_PACKAGE_SIZE           (10)
+#define SENSOR_PACKAGE_ID_SIZE        (2)
+#define SENSOR_PACKAGE_DATA_SIZE      (1)
+#define SENSOR_PACKAGE_MAX_DATA_SIZE  (SENSOR_PACKAGE_SIZE - \
+		                               SENSOR_PACKAGE_ID_SIZE - \
+                                       SENSOR_PACKAGE_DATA_SIZE)
+
 typedef enum {
 	SENSOR_DHT22,
 	SENSOR_MAX
@@ -17,9 +30,11 @@ struct Sensor {
 	void (*pfnDeInit)(void);
 	int (*pfnRead)(uint8_t *paData, uint32_t ui32Size);
 	float (*pfnQuery)(SENSOR_QUERY_TYPE eType, uint8_t *pvData);
+	uint32_t ui32DataSize;
 	void *pvPriv;
 };
 
 struct Sensor *getSensor(SENSOR_TYPE);
+void getSensorPackage(uint8_t *, uint8_t *, uint32_t, uint32_t);
 
 #endif
