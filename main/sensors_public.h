@@ -5,7 +5,7 @@
  * ====|====|==================|
  *  ID |Size|       data       |
  * ====|====|==================|
- * 0  2     3                  12
+ * 0  2     3                  9
  */
 #define SENSOR_PACKAGE_SIZE           (10)
 #define SENSOR_PACKAGE_ID_SIZE        (2)
