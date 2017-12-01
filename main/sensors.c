@@ -1,7 +1,7 @@
 #include <string.h>
 #include "sensors.h"
 
-static struct Sensor Sensors[3] =
+static struct Sensor Sensors[] =
 {
 	{
 		SENSOR_DHT22,
@@ -9,6 +9,7 @@ static struct Sensor Sensors[3] =
 		sensor_dht22_deinit,
 		sensor_dht22_read,
 		sensor_dht22_query,
+		NULL
 	},
 };
 

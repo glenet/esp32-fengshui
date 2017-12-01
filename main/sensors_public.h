@@ -17,6 +17,7 @@ struct Sensor {
 	void (*pfnDeInit)(void);
 	int (*pfnRead)(uint8_t *paData, uint32_t ui32Size);
 	float (*pfnQuery)(SENSOR_QUERY_TYPE eType, uint8_t *pvData);
+	void *pvPriv;
 };
 
 struct Sensor *getSensor(SENSOR_TYPE);
