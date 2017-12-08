@@ -16,21 +16,24 @@
 
 typedef enum {
 	SENSOR_DHT22,
+	SENSOR_PH_METER,
 	SENSOR_MAX
 } SENSOR_TYPE;
 
 typedef enum {
 	SENSOR_DHT22_TEMP,
 	SENSOR_DHT22_HUM,
+	SENSOR_PH,
 } SENSOR_QUERY_TYPE;
 
 struct Sensor {
 	SENSOR_TYPE eType;
 	int (*pfnInit)(uint32_t *, uint32_t);
 	void (*pfnDeInit)(void);
-	int (*pfnRead)(uint8_t *paData, uint32_t ui32Size);
+	int (*pfnRead)(uint8_t *paData);
 	float (*pfnQuery)(SENSOR_QUERY_TYPE eType, uint8_t *pvData);
 	uint32_t ui32DataSize;
+	uint32_t ui32SamplingInterval;
 	void *pvPriv;
 };
 

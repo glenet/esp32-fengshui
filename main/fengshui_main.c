@@ -17,8 +17,13 @@
 #else
 #define DHT22_GPIO 4
 #endif
+#ifdef CONFIG_PH_METER_GPIO
+#define PH_METER_GPIO CONFIG_PH_METER_GPIO
+#else
+#define PH_METER_GPIO 34
+#endif
 
-void DHTHandler(void *pvParameter)
+void SensorHandler(void *pvParameter)
 {
 	struct Sensor *psSensor = (struct Sensor *)pvParameter;
 	uint8_t data[psSensor->ui32DataSize];
@@ -34,11 +39,8 @@ void DHTHandler(void *pvParameter)
 	ESP_LOGI(TAG, "Hander of Sensor #%d is running\n", psSensor->eType);
 
 	while (1) {
-		err = psSensor->pfnRead((uint8_t *)&data, sizeof(data));
+		err = psSensor->pfnRead((uint8_t *)&data);
 		if (err == ESP_OK) {
-			printf("Hum %1.f, Tmp %1.f\n",
-			         psSensor->pfnQuery(SENSOR_DHT22_HUM, (uint8_t *)&data),
-					 psSensor->pfnQuery(SENSOR_DHT22_TEMP, (uint8_t *)&data));
 			if (psConnector) {
 				getSensorPackage((uint8_t *)&package, (uint8_t *)&data,
 				                 psSensor->ui32DataSize, psSensor->eType);
@@ -50,26 +52,19 @@ void DHTHandler(void *pvParameter)
 				}
 			}
 		}
-		vTaskDelay(5000 / portTICK_RATE_MS);
+		vTaskDelay(psSensor->ui32SamplingInterval / portTICK_RATE_MS);
 	}
 }
 
 void app_main()
 {
-	uint32_t ui32DHTGPIO = DHT22_GPIO;
+	uint32_t ui32DHTGPIO = DHT22_GPIO, ui32PHGPIO = PH_METER_GPIO;
 	struct Connector *psWifiConnector;
-	struct Sensor *psDHT22;
+	struct Sensor *psDHT22, *psPH;
 
 	nvs_flash_init();
 	/* Delay 2 secs */
-	vTaskDelay(1000 / portTICK_RATE_MS);
-	psDHT22 = getSensor(SENSOR_DHT22);
-	if (!psDHT22) {
-		ESP_LOGE(TAG, "Failed to find sensor DHT22\n");
-		return;
-	}
-
-	psDHT22->pfnInit(&ui32DHTGPIO, 1);
+	vTaskDelay(2000 / portTICK_RATE_MS);
 
 	psWifiConnector = getConnector(CONNECTOR_WIFI);
 	if (!psWifiConnector) {
@@ -84,7 +79,23 @@ void app_main()
 		ESP_LOGE(TAG, "Failed to connect wifi connector\n");
 		return;
 	}
+
+	psDHT22 = getSensor(SENSOR_DHT22);
+	if (!psDHT22) {
+		ESP_LOGE(TAG, "Failed to find sensor DHT22\n");
+		return;
+	}
+	psDHT22->pfnInit(&ui32DHTGPIO, 1);
 	psDHT22->pvPriv = (void *)psWifiConnector;
-	xTaskCreate(&DHTHandler, "DHTHandler", 2048, psDHT22, 5, NULL);
+	xTaskCreate(&SensorHandler, "DHTHandler", 2048, psDHT22, 5, NULL);
+
+	psPH = getSensor(SENSOR_PH_METER);
+	if (!psPH) {
+		ESP_LOGE(TAG, "Failed to find sensor PH meter\n");
+		return;
+	}
+	psPH->pfnInit(&ui32PHGPIO, 1);
+	psPH->pvPriv = (void *)psWifiConnector;
+	xTaskCreate(&SensorHandler, "PHHandler", 2048, psPH, 5, NULL);
 }
 

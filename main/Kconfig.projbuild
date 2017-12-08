@@ -7,6 +7,13 @@ config DHT22_GPIO
     help
         Config GPIO for DHT (default 4)
 
+config PH_METER_GPIO
+    int "PH meter GPIO"
+	range 0 33
+    default 34
+    help
+        Config GPIO for PH meter (default 34)
+
 config WIFI_SSID
 	string "WiFi SSID"
 	default "IMG-Staff-BYOD"
@@ -30,5 +37,11 @@ config SOCKET_PORT
 	default 3010
 	help
 		Socket port to use.
+
+config PH_METER_OFFSET
+    int "PH meter offset"
+    default 0
+    help
+        Default offset for calibration
 
 endmenu

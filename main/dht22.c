@@ -50,7 +50,7 @@ void sensor_dht22_deinit(void)
 	
 }
 
-int sensor_dht22_read(uint8_t *paData, uint32_t ui32Size)
+int sensor_dht22_read(uint8_t *paData)
 {
 	uint8_t byteInx = 0;
 	uint8_t bitInx = 7;
@@ -63,15 +63,6 @@ int sensor_dht22_read(uint8_t *paData, uint32_t ui32Size)
 		err = -EINVAL;
 		goto err_out;
 	}
-
-	if (ui32Size < MAX_DHT_DATA) {
-		err = -EINVAL;
-		goto err_out;
-	}
-
-	/* cleanup input array */
-	for (int i = 0; i < ui32Size; i++)
-		paData[i] = 0;
 
 	/* Signaling DHT22 */
 	gpio_set_direction(sGPIO, GPIO_MODE_OUTPUT);
@@ -132,6 +123,9 @@ int sensor_dht22_read(uint8_t *paData, uint32_t ui32Size)
 		goto err_out;
 	}
 
+	ESP_LOGI(TAG, "Hum %1.f, Tmp %1.f\n",
+	               sensor_dht22_query(SENSOR_DHT22_TEMP, paData),
+	               sensor_dht22_query(SENSOR_DHT22_HUM, paData));
 	err = 0;
 
 err_out:
@@ -146,21 +140,23 @@ float sensor_dht22_query(SENSOR_QUERY_TYPE eType, uint8_t *pvData)
 		case SENSOR_DHT22_TEMP:
 		{
 			value = pvData[2] & 0x7F;
-			value *= 0x100;	// >> 8
+			value *= 0x100;
 			value += pvData[3];
 			value /= 10;
-			if (pvData[2] & 0x80 ) // negative temp
+			if (pvData[2] & 0x80 )
 				value *= -1;
 			break;
 		}
 		case SENSOR_DHT22_HUM:
 		{
 			value  = pvData[0];
-			value  *= 0x100; 	// >> 8
+			value  *= 0x100;
 			value += pvData[1];
-			value  /= 10;		// get the decimal
+			value  /= 10;
 			break;
 		}
+		default:
+			break;
 	}
 	return value;
 }

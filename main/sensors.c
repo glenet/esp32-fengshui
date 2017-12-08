@@ -10,6 +10,17 @@ static struct Sensor Sensors[] =
 		sensor_dht22_read,
 		sensor_dht22_query,
 		5,
+		5000,
+		NULL
+	},
+	{
+		SENSOR_PH_METER,
+		sensor_ph_meter_init,
+		sensor_ph_meter_deinit,
+		sensor_ph_meter_read,
+		sensor_ph_meter_query,
+		2,
+		20,
 		NULL
 	},
 };
