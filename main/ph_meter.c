@@ -8,11 +8,7 @@
 #include "esp_log.h"
 #include "sensors.h"
 
-#ifdef CONFIG_PH_METER_OFFSET
-#define PH_METER_OFFSET CONFIG_PH_METER_OFFSET
-#else
-#define PH_METER_OFFSET (0)
-#endif
+#define PH_METER_OFFSET (-1.66)
 
 #define TAG "PH"
 #define PH_MAX_SAM_SIZE  200 /* 200 * 20 (ms) */
@@ -36,7 +32,7 @@ int sensor_ph_meter_init(uint32_t *aGPIOs, uint32_t ui32NumGPIOs)
 
 	sGPIO = *aGPIOs;
 
-	ESP_LOGD(TAG, "GPIO %u for PH\n", sGPIO);
+	ESP_LOGI(TAG, "GPIO %u for PH\n", sGPIO);
 
 	bIsInit = true;
 
@@ -102,11 +98,9 @@ int sensor_ph_meter_read(uint8_t *paData)
 		default:
 			ui32Channel = ADC1_CHANNEL_0;
 	}
-	adc1_config_width(ADC_WIDTH_BIT_12);
-	adc1_config_channel_atten(ui32Channel, ADC_ATTEN_DB_0);
-	esp_adc_cal_get_characteristics(V_REF, ADC_ATTEN_DB_0, ADC_WIDTH_BIT_12,
-									&characteristics);
-	aSamples[sNumSamplingSize++] = adc1_to_voltage(ui32Channel, &characteristics);
+	adc1_config_width(ADC_WIDTH_BIT_10);
+	adc1_config_channel_atten(ui32Channel, ADC_ATTEN_DB_11);
+	aSamples[sNumSamplingSize++] = adc1_get_voltage(ui32Channel);
 	/* If we're sampling for 4 ms, going to send the data out */
 	if (sNumSamplingSize == PH_MAX_SAM_SIZE)
 	{
