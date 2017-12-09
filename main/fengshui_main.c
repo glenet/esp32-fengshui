@@ -27,7 +27,11 @@
 #else
 #define EC_METER_GPIO 33
 #endif
-
+#ifdef CONFIG_DS18B20_GPIO
+#define DS18B20_GPIO CONFIG_DS18B20_GPIO
+#else
+#define DS18B20_GPIO 2
+#endif
 void SensorHandler(void *pvParameter)
 {
 	struct Sensor *psSensor = (struct Sensor *)pvParameter;
@@ -65,9 +69,10 @@ void SensorHandler(void *pvParameter)
 
 void app_main()
 {
-	uint32_t ui32DHTGPIO = DHT22_GPIO, ui32PHGPIO = PH_METER_GPIO;
+	uint32_t ui32GPIOs[] = { DHT22_GPIO, PH_METER_GPIO };
+	uint32_t ui32ECGPIOs[] = { EC_METER_GPIO, DS18B20_GPIO };
 	struct Connector *psWifiConnector;
-	struct Sensor *psDHT22, *psPH;
+	struct Sensor *psSensor;
 
 	nvs_flash_init();
 	/* Delay 2 secs */
@@ -87,22 +92,24 @@ void app_main()
 		return;
 	}
 
-	psDHT22 = getSensor(SENSOR_DHT22);
-	if (!psDHT22) {
-		ESP_LOGE(TAG, "Failed to find sensor DHT22\n");
+	for (int i = 0; i < SENSOR_EC_METER; i++) {
+		psSensor = getSensor(i);
+		if (!psSensor) {
+			ESP_LOGE(TAG, "Failed to find sensor %d\n", psSensor->eType);
+			return;
+		}
+		/* Make sure the GPIO sequences are mapping to the sensors */
+		psSensor->pfnInit(&ui32GPIOs[i], 1);
+		psSensor->pvPriv = (void *)psWifiConnector;
+		xTaskCreate(&SensorHandler, "SensorHandler", 2048, psSensor, 5, NULL);
+	}
+	psSensor = getSensor(SENSOR_EC_METER);
+	if (!psSensor) {
+		ESP_LOGE(TAG, "Failed to find sensor %d\n", psSensor->eType);
 		return;
 	}
-	psDHT22->pfnInit(&ui32DHTGPIO, 1);
-	psDHT22->pvPriv = (void *)psWifiConnector;
-	xTaskCreate(&SensorHandler, "DHTHandler", 2048, psDHT22, 5, NULL);
-
-	psPH = getSensor(SENSOR_PH_METER);
-	if (!psPH) {
-		ESP_LOGE(TAG, "Failed to find sensor PH meter\n");
-		return;
-	}
-	psPH->pfnInit(&ui32PHGPIO, 1);
-	psPH->pvPriv = (void *)psWifiConnector;
-	xTaskCreate(&SensorHandler, "PHHandler", 2048, psPH, 5, NULL);
+	psSensor->pfnInit((uint32_t *)&ui32ECGPIOs, 2);
+	psSensor->pvPriv = (void *)psWifiConnector;
+	xTaskCreate(&SensorHandler, "SensorHandler", 2048, psSensor, 5, NULL);
 }
 

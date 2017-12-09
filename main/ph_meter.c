@@ -12,7 +12,6 @@
 
 #define TAG "PH"
 #define PH_MAX_SAM_SIZE  200 /* 200 * 20 (ms) */
-#define V_REF   1100
 
 static uint32_t sGPIO;
 static bool bIsInit = false;
@@ -53,14 +52,11 @@ static float getAverge(int *paData, uint32_t ui32Size)
 	return (average / ui32Size);
 }
 
-int sensor_ph_meter_read(uint8_t *paData)
+int sensor_ph_meter_read(uint32_t *paData)
 {
-    esp_adc_cal_characteristics_t characteristics;
 	float fPHValue, fVoltage;
 	uint32_t ui32Channel;
 	int err = -EINVAL;
-	uint16_t u16Out;
-	uint8_t *pvData;
 
 	if (!bIsInit)
 		goto err_out;
@@ -106,13 +102,10 @@ int sensor_ph_meter_read(uint8_t *paData)
 	{
 		fVoltage = getAverge(aSamples, sNumSamplingSize) * 5.0 / 1024;
 		fPHValue = 3.5 * fVoltage + PH_METER_OFFSET;
-		ESP_LOGE(TAG, "PH %f\n", fPHValue);
-		/* Normalize the data */
-		u16Out = (uint16_t)(fPHValue * 100);
-		pvData = (uint8_t *)&u16Out;
-		paData[0] = *(pvData)++;
-		paData[1] = *pvData;
+		ESP_LOGI(TAG, "PH %f\n", fPHValue);
 		sNumSamplingSize = 0;
+		/* packed data and normalize */
+		paData[0] = (uint32_t)(fPHValue * 100);
 		return 0;
 	}
 
@@ -120,17 +113,4 @@ int sensor_ph_meter_read(uint8_t *paData)
 
 err_out:
 	return err;
-}
-
-float sensor_ph_meter_query(SENSOR_QUERY_TYPE eType, uint8_t *pvData)
-{
-	float fPHValue = 0, fVoltage;
-
-	if (eType == SENSOR_PH)
-	{
-		fVoltage = getAverge(aSamples, sNumSamplingSize) * 5.0 / 1024;
-		fPHValue = 3.5 * fVoltage + PH_METER_OFFSET;
-	}
-
-	return fPHValue;
 }

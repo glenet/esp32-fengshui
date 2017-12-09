@@ -30,7 +30,7 @@ int sensor_ec_meter_init(uint32_t *aGPIOs, uint32_t ui32NumGPIOs)
 
 	/* We should get two gpios, one for EC meter and the onther one for DS18B20 */
 	if (ui32NumGPIOs != 2) {
-		ESP_LOGE(TAG, "Two GPIOs, EC meter and DS18B20\n");
+		ESP_LOGE(TAG, "Two GPIOs, EC meter and DS18B20 but %u\n", ui32NumGPIOs);
 		goto err_out;
 	}
 
@@ -88,12 +88,13 @@ int sensor_ec_meter_read(uint32_t *paData)
 	if (sNumSamplingSize == EC_MAX_SAM_SIZE)
 	{
 		fTemperature = ds18b20_get_temp();
-		fVoltage = getAverge(aSamples, sNumSamplingSize) * 5.0 / 1024;
+		fVoltage = getAverge(aSamples, sNumSamplingSize) * 5000 / 1024;
 		fTempCoefficient = 1.0 + 0.01413 * (fTemperature - 25.0);
-		fCoefficientVolatge = fVoltage / fTempCoefficient;  
+		fCoefficientVolatge = fVoltage / fTempCoefficient;
 		if ((fCoefficientVolatge < 150) || (fCoefficientVolatge > 3300))
 		{
 			/* Invalid data for EC value */
+			ESP_LOGE(TAG, "EC value out of range\n");
 			err = -EAGAIN;
 			goto err_out;
 		}
