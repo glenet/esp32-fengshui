@@ -108,7 +108,7 @@ int sensor_ec_meter_read(uint32_t *paData)
 		sNumSamplingSize = 0;
 
 		ESP_LOGI(TAG, "EC %f, temp %f \n", fECcurrent, fTemperature);
-		paData[0] = (uint32_t)(fECcurrent * 100);
+		paData[0] = (uint32_t)(fECcurrent);
 		paData[1] = (uint32_t)(fTemperature * 100);
 		return 0;
 	}
