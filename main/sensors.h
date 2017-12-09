@@ -19,4 +19,9 @@ int sensor_ec_meter_init(uint32_t *, uint32_t);
 void sensor_ec_meter_deinit(void);
 int sensor_ec_meter_read(uint32_t *);
 
+/* functions for tmet6000  */
+int sensor_tmet6000_init(uint32_t *, uint32_t);
+void sensor_tmet6000_deinit(void);
+int sensor_tmet6000_read(uint32_t *);
+
 #endif

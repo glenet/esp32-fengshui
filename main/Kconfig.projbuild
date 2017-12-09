@@ -7,28 +7,49 @@ config DHT22_GPIO
     help
         Config GPIO for DHT (default 4)
 
+config DS18B20_GPIO
+    int "DS18B20 GPIO"
+	range 0 33
+    default 2
+    help
+        Config GPIO for DS18B20 (default 2)
+
 config PH_METER_GPIO
     int "PH meter GPIO"
-	range 0 34
-    default 34
+	range 0 39
+    default 32
     help
         Config GPIO for PH meter (default 34)
 
+config EC_METER_GPIO
+    int "EC meter GPIO"
+	range 0 39
+    default 33
+    help
+        Config GPIO for EC meter (default 33)
+
+config TMET6000_GPIO
+    int "TMET6000 GPIO"
+	range 0 39
+    default 34
+    help
+        Config GPIO for EC meter (default 33)
+
 config WIFI_SSID
 	string "WiFi SSID"
-	default "IMG-Staff-BYOD"
+	default "XperiaXZ_1432"
 	help
 		SSID (network name) to connect to.
 
 config WIFI_PASSWORD
 	string "WiFi Password"
-	default "IHw1rel3ss"
+	default "1100000011"
 	help
 		WiFi password (WPA or WPA2) to use.
 
 config SOCKET_TCP_IP
 	string "TCP IP"
-	default "10.80.23.122"
+	default "10.37.65.254"
 	help
 		TCP IP of socket server
 

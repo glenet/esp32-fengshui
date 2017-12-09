@@ -20,18 +20,29 @@
 #ifdef CONFIG_PH_METER_GPIO
 #define PH_METER_GPIO CONFIG_PH_METER_GPIO
 #else
-#define PH_METER_GPIO 34
+#define PH_METER_GPIO 32
 #endif
 #ifdef CONFIG_EC_METER_GPIO
 #define EC_METER_GPIO CONFIG_EC_METER_GPIO
 #else
 #define EC_METER_GPIO 33
 #endif
+#ifdef CONFIG_TMET6000_GPIO
+#define TMET6000_GPIO CONFIG_TMET6000_GPIO
+#else
+#define TMET6000_GPIO 34
+#endif
 #ifdef CONFIG_DS18B20_GPIO
 #define DS18B20_GPIO CONFIG_DS18B20_GPIO
 #else
 #define DS18B20_GPIO 2
 #endif
+#ifdef CONFIG_DS18B20_GPIO
+#define DS18B20_GPIO CONFIG_DS18B20_GPIO
+#else
+#define DS18B20_GPIO 2
+#endif
+
 void SensorHandler(void *pvParameter)
 {
 	struct Sensor *psSensor = (struct Sensor *)pvParameter;
@@ -69,8 +80,9 @@ void SensorHandler(void *pvParameter)
 
 void app_main()
 {
-	uint32_t ui32GPIOs[] = { DHT22_GPIO, PH_METER_GPIO };
 	uint32_t ui32ECGPIOs[] = { EC_METER_GPIO, DS18B20_GPIO };
+	uint32_t ui32GPIOs[] = { DHT22_GPIO, PH_METER_GPIO };
+	uint32_t ui32TMET6000 = TMET6000_GPIO;
 	struct Connector *psWifiConnector;
 	struct Sensor *psSensor;
 
@@ -109,6 +121,14 @@ void app_main()
 		return;
 	}
 	psSensor->pfnInit((uint32_t *)&ui32ECGPIOs, 2);
+	psSensor->pvPriv = (void *)psWifiConnector;
+	xTaskCreate(&SensorHandler, "SensorHandler", 2048, psSensor, 5, NULL);
+	psSensor = getSensor(SENSOR_TEMT6000);
+	if (!psSensor) {
+		ESP_LOGE(TAG, "Failed to find sensor %d\n", psSensor->eType);
+		return;
+	}
+	psSensor->pfnInit(&ui32TMET6000, 1);
 	psSensor->pvPriv = (void *)psWifiConnector;
 	xTaskCreate(&SensorHandler, "SensorHandler", 2048, psSensor, 5, NULL);
 }

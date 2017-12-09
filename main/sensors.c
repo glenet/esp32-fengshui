@@ -42,6 +42,18 @@ static struct Sensor Sensors[] =
 		},
 		NULL
 	},
+	{
+		SENSOR_TEMT6000,
+		sensor_tmet6000_init,
+		sensor_tmet6000_deinit,
+		sensor_tmet6000_read,
+		5000,
+		1,
+		{
+			SENSOR_TEMT6000_LIGHT,
+		},
+		NULL
+	},
 };
 
 struct Sensor *getSensor(SENSOR_TYPE eType)
