@@ -124,6 +124,7 @@ void WIFIHandler(void *pvParam)
 				continue;
 			}
 		}
+		vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
 
