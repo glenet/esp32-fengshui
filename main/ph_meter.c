@@ -7,6 +7,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "sensors.h"
+#include "utils.h"
 
 #define PH_METER_OFFSET (-1.66)
 
@@ -40,6 +41,7 @@ int sensor_ph_meter_init(uint32_t *aGPIOs, uint32_t ui32NumGPIOs)
 
 void sensor_ph_meter_deinit(void)
 {
+	bIsInit = false;
 }
 
 static float getAverge(int *paData, uint32_t ui32Size)
@@ -55,7 +57,6 @@ static float getAverge(int *paData, uint32_t ui32Size)
 int sensor_ph_meter_read(uint32_t *paData)
 {
 	float fPHValue, fVoltage;
-	uint32_t ui32Channel;
 	int err = -EINVAL;
 
 	if (!bIsInit)
@@ -66,37 +67,9 @@ int sensor_ph_meter_read(uint32_t *paData)
 		goto err_out;
 	}
 
-	switch (sGPIO) {
-		case ADC1_CHANNEL_0_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_0;
-			break;
-		case ADC1_CHANNEL_1_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_1;
-			break;
-		case ADC1_CHANNEL_2_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_2;
-			break;
-		case ADC1_CHANNEL_3_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_3;
-			break;
-		case ADC1_CHANNEL_4_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_4;
-			break;
-		case ADC1_CHANNEL_5_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_5;
-			break;
-		case ADC1_CHANNEL_6_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_6;
-			break;
-		case ADC1_CHANNEL_7_GPIO_NUM:
-			ui32Channel = ADC1_CHANNEL_7;
-			break;
-		default:
-			ui32Channel = ADC1_CHANNEL_0;
-	}
 	adc1_config_width(ADC_WIDTH_BIT_10);
-	adc1_config_channel_atten(ui32Channel, ADC_ATTEN_DB_11);
-	aSamples[sNumSamplingSize++] = adc1_get_voltage(ui32Channel);
+	adc1_config_channel_atten(getADCChannel(sGPIO), ADC_ATTEN_DB_11);
+	aSamples[sNumSamplingSize++] = adc1_get_raw(getADCChannel(sGPIO));
 	/* If we're sampling for 4 ms, going to send the data out */
 	if (sNumSamplingSize == PH_MAX_SAM_SIZE)
 	{

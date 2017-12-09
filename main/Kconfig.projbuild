@@ -9,7 +9,7 @@ config DHT22_GPIO
 
 config PH_METER_GPIO
     int "PH meter GPIO"
-	range 0 33
+	range 0 34
     default 34
     help
         Config GPIO for PH meter (default 34)

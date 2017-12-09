@@ -83,7 +83,7 @@ int sensor_ec_meter_read(uint32_t *paData)
 	ui32Channel = getADCChannel(sGPIOEC);
 	adc1_config_width(ADC_WIDTH_BIT_10);
 	adc1_config_channel_atten(ui32Channel, ADC_ATTEN_DB_11);
-	aSamples[sNumSamplingSize++] = adc1_get_voltage(ui32Channel);
+	aSamples[sNumSamplingSize++] = adc1_get_raw(ui32Channel);
 	/* If we're sampling for 4 ms, going to send the data out */
 	if (sNumSamplingSize == EC_MAX_SAM_SIZE)
 	{
@@ -91,11 +91,16 @@ int sensor_ec_meter_read(uint32_t *paData)
 		fVoltage = getAverge(aSamples, sNumSamplingSize) * 5000 / 1024;
 		fTempCoefficient = 1.0 + 0.01413 * (fTemperature - 25.0);
 		fCoefficientVolatge = fVoltage / fTempCoefficient;
+		ESP_LOGI(TAG, "analog %f, temp %f \n", getAverge(aSamples, sNumSamplingSize) , fTemperature);
 		if ((fCoefficientVolatge < 150) || (fCoefficientVolatge > 3300))
 		{
-			/* Invalid data for EC value */
+			/* Invalid data for EC value 
+			 * Sending fake data to service.
+			 */
 			ESP_LOGE(TAG, "EC value out of range\n");
-			err = -EAGAIN;
+			paData[0] = 0;
+			paData[1] = 0;
+			err =  0;
 			goto err_out;
 		}
 		if (fCoefficientVolatge <= 448)
