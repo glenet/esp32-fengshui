@@ -22,33 +22,40 @@
 #else
 #define PH_METER_GPIO 34
 #endif
+#ifdef CONFIG_EC_METER_GPIO
+#define EC_METER_GPIO CONFIG_EC_METER_GPIO
+#else
+#define EC_METER_GPIO 33
+#endif
 
 void SensorHandler(void *pvParameter)
 {
 	struct Sensor *psSensor = (struct Sensor *)pvParameter;
-	uint8_t data[psSensor->ui32DataSize];
+	uint32_t data[psSensor->ui32NumType];
 	uint8_t package[SENSOR_PACKAGE_SIZE];
 	struct Connector *psConnector;
 	int err = 0;
 
 	if (!psSensor) {
-		ESP_LOGE(TAG, "Failed to find sensor DHT22\n");
+		ESP_LOGE(TAG, "Failed to find sensor %d\n", psSensor->eType);
 	}
 
 	psConnector = (struct Connector *)psSensor->pvPriv;
 	ESP_LOGI(TAG, "Hander of Sensor #%d is running\n", psSensor->eType);
 
 	while (1) {
-		err = psSensor->pfnRead((uint8_t *)&data);
+		err = psSensor->pfnRead((uint32_t *)&data);
 		if (err == ESP_OK) {
 			if (psConnector) {
-				getSensorPackage((uint8_t *)&package, (uint8_t *)&data,
-				                 psSensor->ui32DataSize, psSensor->eType);
-				/* Sending package */
-				err = psConnector->pfnSend((uint8_t *)&package,
-				                           SENSOR_PACKAGE_SIZE);
-				if (err) {
-					ESP_LOGE(TAG, "Failed to send ID via connector\n");
+				for (int i = 0; i < psSensor->ui32NumType; i++) {
+					getSensorPackage((uint8_t *)&package,
+					             psSensor->eQueryTypes[i], data[i]);
+					/* Sending package */
+					err = psConnector->pfnSend((uint8_t *)&package,
+					                           SENSOR_PACKAGE_SIZE);
+					if (err) {
+						ESP_LOGE(TAG, "Failed to send ID via connector\n");
+					}
 				}
 			}
 		}

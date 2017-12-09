@@ -38,7 +38,7 @@ int sensor_dht22_init(uint32_t *aGPIOs, uint32_t ui32NumGPIOs)
 
 	sGPIO = *aGPIOs;
 	
-	ESP_LOGD(TAG, "GPIO %u for DHT22\n", sGPIO);
+	ESP_LOGI(TAG, "GPIO %u for DHT22\n", sGPIO);
 
 	bIsInit = true;
 
@@ -47,13 +47,43 @@ int sensor_dht22_init(uint32_t *aGPIOs, uint32_t ui32NumGPIOs)
 
 void sensor_dht22_deinit(void)
 {
-	
+	bIsInit = false;
 }
 
-int sensor_dht22_read(uint8_t *paData)
+static float sensor_dht22_query(SENSOR_QUERY_TYPE eType, uint8_t *pvData)
 {
-	uint8_t byteInx = 0;
+	float value = 0.0;
+
+	switch (eType) {
+		case SENSOR_DHT22_TEMP:
+		{
+			value = pvData[2] & 0x7F;
+			value *= 0x100;
+			value += pvData[3];
+			value /= 10;
+			if (pvData[2] & 0x80 )
+				value *= -1;
+			break;
+		}
+		case SENSOR_DHT22_HUM:
+		{
+			value  = pvData[0];
+			value  *= 0x100;
+			value += pvData[1];
+			value  /= 10;
+			break;
+		}
+		default:
+			break;
+	}
+	return value;
+}
+
+int sensor_dht22_read(uint32_t *paData)
+{
+	uint8_t byteInx = 0, sInputData[5] = { 0 };
 	uint8_t bitInx = 7;
+	float fHum, fTemp;
 	int err = -EAGAIN;
 
 	if (!bIsInit)
@@ -106,7 +136,7 @@ int sensor_dht22_read(uint8_t *paData)
 		 */
 	
 		if (err > 40)
-			paData[byteInx] |= (1 << bitInx);
+			sInputData[byteInx] |= (1 << bitInx);
 		/* index to next byte */
 		if (bitInx == 0) {
 			bitInx = 7;
@@ -117,46 +147,21 @@ int sensor_dht22_read(uint8_t *paData)
 	}
 
 	/* Checksum is the sum of Data 8 bits masked out 0xFF */
-	if (paData[4] != ((paData[0] + paData[1] + paData[2] +
-	                     paData[3]) & 0xFF)) {
+	if (sInputData[4] != ((sInputData[0] + sInputData[1] + sInputData[2] +
+	                     sInputData[3]) & 0xFF)) {
+		ESP_LOGE(TAG, "%s No memory \n", __func__);
 		err = -ENOMEM;
 		goto err_out;
 	}
+	fTemp = sensor_dht22_query(SENSOR_DHT22_TEMP, (uint8_t *)&sInputData);
+	fHum = sensor_dht22_query(SENSOR_DHT22_HUM, (uint8_t *)&sInputData);
 
-	ESP_LOGI(TAG, "Hum %1.f, Tmp %1.f\n",
-	               sensor_dht22_query(SENSOR_DHT22_TEMP, paData),
-	               sensor_dht22_query(SENSOR_DHT22_HUM, paData));
+	ESP_LOGI(TAG, "Hum %1.f, Tmp %1.f\n", fTemp, fHum);
+	/* packed data and normalize */
+	paData[0] = (uint32_t)(fTemp * 100);
+	paData[1] = (uint32_t)(fHum * 100);
 	err = 0;
 
 err_out:
 	return err;
-}
-
-float sensor_dht22_query(SENSOR_QUERY_TYPE eType, uint8_t *pvData)
-{
-	float value = 0.0;
-
-	switch (eType) {
-		case SENSOR_DHT22_TEMP:
-		{
-			value = pvData[2] & 0x7F;
-			value *= 0x100;
-			value += pvData[3];
-			value /= 10;
-			if (pvData[2] & 0x80 )
-				value *= -1;
-			break;
-		}
-		case SENSOR_DHT22_HUM:
-		{
-			value  = pvData[0];
-			value  *= 0x100;
-			value += pvData[1];
-			value  /= 10;
-			break;
-		}
-		default:
-			break;
-	}
-	return value;
 }
