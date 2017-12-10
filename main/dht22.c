@@ -108,17 +108,11 @@ int sensor_dht22_read(uint32_t *paData)
 	err = getSignalLevel(85, 0);
 	if (err < 0) {
 		ESP_LOGV(TAG, "Timeout for waiting on low level over 80 us\n");
-		paData[0] = 0;
-		paData[1] = 0;
-		err = 0;
 		goto err_out;
 	}
 	err = getSignalLevel(85, 1);
 	if (err < 0) {
 		ESP_LOGE(TAG, "Timeout for waiting on high level over 80 us\n");
-		paData[0] = 0;
-		paData[1] = 0;
-		err = 0;
 		goto err_out;
 	}
 
@@ -128,18 +122,12 @@ int sensor_dht22_read(uint32_t *paData)
 		err = getSignalLevel(56, 0);
 		if (err < 0) {
 			ESP_LOGV(TAG, "Timeout for waiting on low level over 56 us\n");
-			paData[0] = 0;
-			paData[1] = 0;
-			err = 0;
 			goto err_out;
 		}
 		/* check if after >70us rx data is a 0 or a 1 */
 		err = getSignalLevel(75, 1);
 		if (err < 0) {
 			ESP_LOGV(TAG, "Timeout for waiting on high level over 75 us\n");
-			paData[0] = 0;
-			paData[1] = 0;
-			err = 0;
 			goto err_out;
 		}
 		/* add the current read to the output data
@@ -162,9 +150,6 @@ int sensor_dht22_read(uint32_t *paData)
 	if (sInputData[4] != ((sInputData[0] + sInputData[1] + sInputData[2] +
 	                     sInputData[3]) & 0xFF)) {
 		ESP_LOGE(TAG, "%s No memory \n", __func__);
-		paData[0] = 0;
-		paData[1] = 0;
-		err = 0;
 		goto err_out;
 	}
 	fTemp = sensor_dht22_query(SENSOR_DHT22_TEMP, (uint8_t *)&sInputData);

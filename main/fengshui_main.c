@@ -61,16 +61,21 @@ void SensorHandler(void *pvParameter)
 	while (1) {
 		err = psSensor->pfnRead((uint32_t *)&data);
 		if (err == ESP_OK) {
+			for (int j = 0; j < SENSOR_PACKAGE_SIZE; j++)
+					package[j] = 0;
 			if (psConnector) {
 				for (int i = 0; i < psSensor->ui32NumType; i++) {
 					getSensorPackage((uint8_t *)&package,
 					             psSensor->eQueryTypes[i], data[i]);
 					/* Sending package */
+					for (int j = 0; j < SENSOR_PACKAGE_SIZE; j++)
+						ESP_LOGE(TAG, "package[j]=%x\n", package[j]);
 					err = psConnector->pfnSend((uint8_t *)&package,
 					                           SENSOR_PACKAGE_SIZE);
 					if (err) {
 						ESP_LOGE(TAG, "Failed to send ID via connector\n");
 					}
+					vTaskDelay(2000 / portTICK_RATE_MS);
 				}
 			}
 		}

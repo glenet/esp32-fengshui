@@ -49,7 +49,7 @@ config WIFI_PASSWORD
 
 config SOCKET_TCP_IP
 	string "TCP IP"
-	default "10.37.65.254"
+	default "192.168.43.106"
 	help
 		TCP IP of socket server
 
