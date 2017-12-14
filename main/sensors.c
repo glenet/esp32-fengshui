@@ -1,3 +1,7 @@
+/* Copyright (C) Michael Yang
+ * Written by Michael Yang <czhe.yang@gmail.com>, December 2017
+ */
+
 #include <string.h>
 #include "sensors.h"
 #include <stdio.h>

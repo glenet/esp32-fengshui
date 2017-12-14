@@ -1,12 +1,10 @@
+/* Copyright (C) Michael Yang
+ * Written by Michael Yang <czhe.yang@gmail.com>, December 2017
+ */
+
 #ifndef SENSORS_PUBLIC_H
 #define SENSORS_PUBLIC_H
 
-/* Package format
- * ====|====|==================|
- *  ID |Size|       data       |
- * ====|====|==================|
- * 0  2     3                  9
- */
 #define SENSOR_PACKAGE_SIZE           (8)
 #define SENSOR_PACKAGE_SRTART_CHT     (1)
 #define SENSOR_PACKAGE_ID_SIZE        (2)
