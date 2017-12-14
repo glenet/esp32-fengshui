@@ -150,6 +150,7 @@ int sensor_dht22_read(uint32_t *paData)
 	if (sInputData[4] != ((sInputData[0] + sInputData[1] + sInputData[2] +
 	                     sInputData[3]) & 0xFF)) {
 		ESP_LOGE(TAG, "%s No memory \n", __func__);
+		err = -ENOMEM;
 		goto err_out;
 	}
 	fTemp = sensor_dht22_query(SENSOR_DHT22_TEMP, (uint8_t *)&sInputData);

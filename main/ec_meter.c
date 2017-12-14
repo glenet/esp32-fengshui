@@ -98,9 +98,6 @@ int sensor_ec_meter_read(uint32_t *paData)
 			 * Sending fake data to service.
 			 */
 			ESP_LOGE(TAG, "EC value out of range\n");
-			paData[0] = 0;
-			paData[1] = 0;
-			err =  0;
 			goto err_out;
 		}
 		if (fCoefficientVolatge <= 448)
